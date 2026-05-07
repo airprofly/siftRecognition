@@ -183,37 +183,36 @@ class SceneRecConfig:
     Attributes:
         vocab_size (int): Size of visual vocabulary (k-means clusters), default 100.
         cache_dir (str | Path): Directory for caching features and vocabulary, default ``./data``.
-        vocab_path (str): Vocabulary cache filename, default ``vocab_100.npy``.
-        tiny_train_cache (str): Tiny image train features cache filename, default ``train_tiny.npy``.
-        tiny_test_cache (str): Tiny image test features cache filename, default ``test_tiny.npy``.
-        bof_train_cache (str): BoF train features cache filename, default ``train_bof_100.npy``.
-        bof_test_cache (str): BoF test features cache filename, default ``test_bof_100.npy``.
+        tiny_train_path (str | Path): Tiny image train features cache path, relative or absolute, default ``train_tiny.npy``; resolved to full path in __post_init__.
+        tiny_test_path (str | Path): Tiny image test features cache path, default ``test_tiny.npy``; resolved to full path in __post_init__.
         k_tiny_images (int): k for k-NN in tiny image pipeline, default 3.
         k_bag_of_sifts (int): k for k-NN in BoF pipeline, default 15.
         svm_c (float): Regularization parameter C for LinearSVM, default 0.1.
         num_per_cat (int | None): Limit images per category for training (None = all), default 100.
         stride (int): Sampling stride for dense SIFT extraction, default 20.
+        results_dir (str | Path): Output directory for confusion matrix heatmap, default ``./results``.
+        vocab_path (str | Path): Vocabulary cache path, auto-generated from ``vocab_size``.
+        bof_train_path (str | Path): BoF train features cache path, auto-generated from ``vocab_size``.
+        bof_test_path (str | Path): BoF test features cache path, auto-generated from ``vocab_size``.
+        confusion_matrix_path (str | Path): Confusion matrix heatmap path, resolved from ``results_dir``.
         categories (list[str]): Full category names for classification.
         abbr_categories (list[str]): Abbreviated names for confusion matrix display.
-        vocab_full_path (Path): Pre-resolved full path to vocabulary cache.
-        tiny_train_full_path (Path): Pre-resolved full path to tiny image train cache.
-        tiny_test_full_path (Path): Pre-resolved full path to tiny image test cache.
-        bof_train_full_path (Path): Pre-resolved full path to BoF train cache.
-        bof_test_full_path (Path): Pre-resolved full path to BoF test cache.
     """
 
     vocab_size: int = 100
     cache_dir: str | Path = Path("./data")
-    vocab_path: str = "vocab_100.npy"
-    tiny_train_cache: str = "train_tiny.npy"
-    tiny_test_cache: str = "test_tiny.npy"
-    bof_train_cache: str = "train_bof_100.npy"
-    bof_test_cache: str = "test_bof_100.npy"
+    tiny_train_path: str | Path = Path("train_tiny.npy")
+    tiny_test_path: str | Path = Path("test_tiny.npy")
     k_tiny_images: int = 3
     k_bag_of_sifts: int = 15
     svm_c: float = 0.1
     num_per_cat: int | None = 100
     stride: int = 20
+    results_dir: str | Path = Path("./results")
+    vocab_path: str | Path = Path("vocab_100.npy")
+    bof_train_path: str | Path = Path("train_bof_100.npy")
+    bof_test_path: str | Path = Path("test_bof_100.npy")
+    confusion_matrix_path: str | Path = Path("confusion_matrix.png")
     categories: list[str] = field(
         default_factory=lambda: [
             "Kitchen", "Store", "Bedroom", "LivingRoom", "Office",
@@ -228,28 +227,22 @@ class SceneRecConfig:
             "Hig", "Ope", "Coa", "Mou", "For",
         ]
     )
-    # pre-resolved full paths (computed in __post_init__ from cache_dir + filename)
-    vocab_full_path: path = field(init=false, default=path())
-    tiny_train_full_path: path = field(init=false, default=path())
-    tiny_test_full_path: path = field(init=false, default=path())
-    bof_train_full_path: path = field(init=false, default=path())
-    bof_test_full_path: path = field(init=false, default=path())
 
     def __post_init__(self) -> None:
         if isinstance(self.cache_dir, str):
             object.__setattr__(self, "cache_dir", Path(self.cache_dir))
-
-        # Auto-generate cache filenames from vocab_size and stride
-        object.__setattr__(self, "vocab_path", f"vocab_{self.vocab_size}.npy")
-        object.__setattr__(self, "bof_train_cache", f"train_bof_{self.vocab_size}.npy")
-        object.__setattr__(self, "bof_test_cache", f"test_bof_{self.vocab_size}.npy")
+        if isinstance(self.results_dir, str):
+            object.__setattr__(self, "results_dir", Path(self.results_dir))
 
         cache = Path(self.cache_dir)
-        object.__setattr__(self, "vocab_full_path", cache.joinpath(self.vocab_path))
-        object.__setattr__(self, "tiny_train_full_path", cache.joinpath(self.tiny_train_cache))
-        object.__setattr__(self, "tiny_test_full_path", cache.joinpath(self.tiny_test_cache))
-        object.__setattr__(self, "bof_train_full_path", cache.joinpath(self.bof_train_cache))
-        object.__setattr__(self, "bof_test_full_path", cache.joinpath(self.bof_test_cache))
+        results = Path(self.results_dir)
+        # Overwrite fields with full paths resolved from cache_dir / results_dir
+        object.__setattr__(self, "vocab_path", cache.joinpath(f"vocab_{self.vocab_size}.npy"))
+        object.__setattr__(self, "tiny_train_path", cache.joinpath(Path(self.tiny_train_path)))
+        object.__setattr__(self, "tiny_test_path", cache.joinpath(Path(self.tiny_test_path)))
+        object.__setattr__(self, "bof_train_path", cache.joinpath(f"train_bof_{self.vocab_size}.npy"))
+        object.__setattr__(self, "bof_test_path", cache.joinpath(f"test_bof_{self.vocab_size}.npy"))
+        object.__setattr__(self, "confusion_matrix_path", results.joinpath(Path(self.confusion_matrix_path)))
 
 
 @dataclass(frozen=True)

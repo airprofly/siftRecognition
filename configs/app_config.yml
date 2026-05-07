@@ -26,6 +26,7 @@ scene_rec:
   svm_c: 0.1
   num_per_cat: 100
   stride: 20
+  results_dir: ./results
 
 experiment:
   scale_factor: 0.5

@@ -393,34 +393,46 @@ def evaluate_correspondence(
 
 
 def show_results(
-    train_labels, test_labels, categories, abbr_categories, predicted_categories
+    train_labels,
+    test_labels,
+    categories,
+    abbr_categories,
+    predicted_categories,
+    save_path: str | Path | None = None,
 ):
-    """
-    shows the results
-    :param train_image_paths:
-    :param test_image_paths:
-    :param train_labels:
-    :param test_labels:
-    :param categories:
-    :param abbr_categories:
-    :param predicted_categories:
-    :return:
+    """Plot and save confusion matrix heatmap.
+
+    Args:
+        train_labels: ground-truth labels for training set.
+        test_labels: ground-truth labels for test set.
+        categories: full category names.
+        abbr_categories: abbreviated names for x-axis.
+        predicted_categories: predicted labels for test set.
+        save_path: path to save the heatmap PNG, or None to skip saving.
     """
     cat2idx = {cat: idx for idx, cat in enumerate(categories)}
 
-    # confusion matrix
     y_true = [cat2idx[cat] for cat in test_labels]
     y_pred = [cat2idx[cat] for cat in predicted_categories]
-    plt_cm = confusion_matrix(y_true, y_pred)
-    plt.figure()
-    acc = np.mean(np.diag(plt_cm))
-    plt_cm = plt_cm.astype("float") / plt_cm.sum(axis=1)[:, np.newaxis]
-    plt.imshow(plt_cm, interpolation="nearest", cmap=plt.cm.get_cmap("jet"))
-    plt.title("Confusion matrix. Mean of diagonal = {:4.2f}%".format(acc))
+    cm = confusion_matrix(y_true, y_pred)
+    acc = np.mean(np.diag(cm))
+    cm_norm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(cm_norm, interpolation="nearest", cmap="plasma")
+    ax.set_title("Confusion matrix. Mean of diagonal = {:4.2f}%".format(acc))
     tick_marks = np.arange(len(categories))
-    plt.tight_layout()
-    plt.xticks(tick_marks, abbr_categories, rotation=45)
-    plt.yticks(tick_marks, categories)
+    ax.set_xticks(tick_marks, abbr_categories, rotation=45, ha="right")
+    ax.set_yticks(tick_marks, categories)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), bbox_inches="tight", dpi=150)
 
 
 if __name__ == "__main__":

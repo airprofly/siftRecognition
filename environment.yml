@@ -1,0 +1,18 @@
+name: pytorch
+channels:
+  - defaults
+dependencies:
+  - loguru=0.7.3
+  - matplotlib=3.10.7
+  - numpy=2.3.5
+  - pillow=12.0.0
+  - pip=25.3
+  - pytest=8.4.2
+  - python=3.12.12
+  - pyyaml=6.0.3
+  - scipy=1.16.3
+  - tqdm=4.67.1
+  - pip:
+    - scikit-learn==1.8.0
+    - torch==2.9.1+cu126
+    - torchvision==0.24.1+cu126

@@ -75,46 +75,50 @@ def pipeline_tiny_images(
     logger.info(f"=== Pipeline 1: Tiny Images + k-NN (k={k}) ===")
 
     cfg = APP_CONFIG.scene_rec
-    if cfg.tiny_train_full_path.exists() and cfg.tiny_test_full_path.exists():
-        train_feats = np.load(str(cfg.tiny_train_full_path))
-        test_feats = np.load(str(cfg.tiny_test_full_path))
-        logger.info(f"Loaded cached tiny features from {cfg.tiny_train_full_path} and {cfg.tiny_test_full_path}")
+    tiny_train = Path(cfg.tiny_train_path)
+    tiny_test = Path(cfg.tiny_test_path)
+    if tiny_train.exists() and tiny_test.exists():
+        train_feats = np.load(str(tiny_train))
+        test_feats = np.load(str(tiny_test))
+        logger.info(f"Loaded cached tiny features from {tiny_train} and {tiny_test}")
     else:
         train_feats = get_tiny_images(train_images)
         test_feats = get_tiny_images(test_images)
-        cfg.tiny_train_full_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(str(cfg.tiny_train_full_path), train_feats)
-        np.save(str(cfg.tiny_test_full_path), test_feats)
-        logger.info(f"Tiny features saved to {cfg.tiny_train_full_path} and {cfg.tiny_test_full_path}")
+        tiny_train.parent.mkdir(parents=True, exist_ok=True)
+        np.save(str(tiny_train), train_feats)
+        np.save(str(tiny_test), test_feats)
+        logger.info(f"Tiny features saved to {tiny_train} and {tiny_test}")
     logger.info(f"Train features: {train_feats.shape}, Test features: {test_feats.shape}")
 
     predicted = nearest_neighbor_classify(train_feats, train_labels, test_feats, k=k)
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
     return predicted
 
 
 def _load_vocabulary(train_images: list[np.ndarray]) -> np.ndarray:
     """Load or build the visual vocabulary."""
     cfg = APP_CONFIG.scene_rec
-    if cfg.vocab_full_path.exists():
-        vocabulary = np.load(str(cfg.vocab_full_path))
-        logger.info(f"Loaded vocabulary from {cfg.vocab_full_path}")
+    vocab = Path(cfg.vocab_path)
+    if vocab.exists():
+        vocabulary = np.load(str(vocab))
+        logger.info(f"Loaded vocabulary from {vocab}")
     else:
         logger.info(f"Building vocabulary (size={cfg.vocab_size}, stride={cfg.stride}) from training images ...")
         vocabulary = build_vocabulary(train_images, cfg.vocab_size, stride=cfg.stride)
-        cfg.vocab_full_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(str(cfg.vocab_full_path), vocabulary)
-        logger.info(f"Vocabulary saved to {cfg.vocab_full_path}")
+        vocab.parent.mkdir(parents=True, exist_ok=True)
+        np.save(str(vocab), vocabulary)
+        logger.info(f"Vocabulary saved to {vocab}")
     return vocabulary
 
 
 def _load_bof_features(
-    images: list[np.ndarray], vocabulary: np.ndarray, feat_path: Path, tag: str
+    images: list[np.ndarray], vocabulary: np.ndarray, feat_path: str | Path, tag: str
 ) -> np.ndarray:
     """Load or compute Bag-of-SIFT features for a set of images."""
+    feat_path = Path(feat_path)
     if feat_path.exists():
         feats = np.load(str(feat_path))
         logger.info(f"Loaded cached {tag} features from {feat_path}")
@@ -140,10 +144,10 @@ def pipeline_bag_of_sifts(
     cfg = APP_CONFIG.scene_rec
 
     logger.info("Extracting Bag of SIFT features for training set ...")
-    train_feats = _load_bof_features(train_images, vocabulary, cfg.bof_train_full_path, "train")
+    train_feats = _load_bof_features(train_images, vocabulary, cfg.bof_train_path, "train")
 
     logger.info("Extracting Bag of SIFT features for test set ...")
-    test_feats = _load_bof_features(test_images, vocabulary, cfg.bof_test_full_path, "test")
+    test_feats = _load_bof_features(test_images, vocabulary, cfg.bof_test_path, "test")
 
     logger.info(f"Train BoF features: {train_feats.shape}, Test BoF features: {test_feats.shape}")
 
@@ -151,7 +155,7 @@ def pipeline_bag_of_sifts(
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
     return predicted
 
 
@@ -168,10 +172,10 @@ def pipeline_bag_of_sifts_svm(
     vocabulary = _load_vocabulary(train_images)
 
     logger.info("Extracting Bag of SIFT features for training set ...")
-    train_feats = _load_bof_features(train_images, vocabulary, cfg.bof_train_full_path, "train")
+    train_feats = _load_bof_features(train_images, vocabulary, cfg.bof_train_path, "train")
 
     logger.info("Extracting Bag of SIFT features for test set ...")
-    test_feats = _load_bof_features(test_images, vocabulary, cfg.bof_test_full_path, "test")
+    test_feats = _load_bof_features(test_images, vocabulary, cfg.bof_test_path, "test")
 
     logger.info(f"Train BoF features: {train_feats.shape}, Test BoF features: {test_feats.shape}")
 
@@ -179,7 +183,7 @@ def pipeline_bag_of_sifts_svm(
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
     return predicted
 
 
