@@ -177,6 +177,82 @@ class SceneConfig:
 
 
 @dataclass(frozen=True)
+class SceneRecConfig:
+    """Scene recognition pipeline hyperparameters and cache paths.
+
+    Attributes:
+        vocab_size (int): Size of visual vocabulary (k-means clusters), default 100.
+        cache_dir (str | Path): Directory for caching features and vocabulary, default ``./data``.
+        vocab_path (str): Vocabulary cache filename, default ``vocab_100.npy``.
+        tiny_train_cache (str): Tiny image train features cache filename, default ``train_tiny.npy``.
+        tiny_test_cache (str): Tiny image test features cache filename, default ``test_tiny.npy``.
+        bof_train_cache (str): BoF train features cache filename, default ``train_bof_100.npy``.
+        bof_test_cache (str): BoF test features cache filename, default ``test_bof_100.npy``.
+        k_tiny_images (int): k for k-NN in tiny image pipeline, default 3.
+        k_bag_of_sifts (int): k for k-NN in BoF pipeline, default 15.
+        svm_c (float): Regularization parameter C for LinearSVM, default 0.1.
+        num_per_cat (int | None): Limit images per category for training (None = all), default 100.
+        stride (int): Sampling stride for dense SIFT extraction, default 20.
+        categories (list[str]): Full category names for classification.
+        abbr_categories (list[str]): Abbreviated names for confusion matrix display.
+        vocab_full_path (Path): Pre-resolved full path to vocabulary cache.
+        tiny_train_full_path (Path): Pre-resolved full path to tiny image train cache.
+        tiny_test_full_path (Path): Pre-resolved full path to tiny image test cache.
+        bof_train_full_path (Path): Pre-resolved full path to BoF train cache.
+        bof_test_full_path (Path): Pre-resolved full path to BoF test cache.
+    """
+
+    vocab_size: int = 100
+    cache_dir: str | Path = Path("./data")
+    vocab_path: str = "vocab_100.npy"
+    tiny_train_cache: str = "train_tiny.npy"
+    tiny_test_cache: str = "test_tiny.npy"
+    bof_train_cache: str = "train_bof_100.npy"
+    bof_test_cache: str = "test_bof_100.npy"
+    k_tiny_images: int = 3
+    k_bag_of_sifts: int = 15
+    svm_c: float = 0.1
+    num_per_cat: int | None = 100
+    stride: int = 20
+    categories: list[str] = field(
+        default_factory=lambda: [
+            "Kitchen", "Store", "Bedroom", "LivingRoom", "Office",
+            "Industrial", "Suburb", "InsideCity", "TallBuilding", "Street",
+            "Highway", "OpenCountry", "Coast", "Mountain", "Forest",
+        ]
+    )
+    abbr_categories: list[str] = field(
+        default_factory=lambda: [
+            "Kit", "Sto", "Bed", "Liv", "Off",
+            "Ind", "Sub", "Ins", "Tal", "Str",
+            "Hig", "Ope", "Coa", "Mou", "For",
+        ]
+    )
+    # pre-resolved full paths (computed in __post_init__ from cache_dir + filename)
+    vocab_full_path: path = field(init=false, default=path())
+    tiny_train_full_path: path = field(init=false, default=path())
+    tiny_test_full_path: path = field(init=false, default=path())
+    bof_train_full_path: path = field(init=false, default=path())
+    bof_test_full_path: path = field(init=false, default=path())
+
+    def __post_init__(self) -> None:
+        if isinstance(self.cache_dir, str):
+            object.__setattr__(self, "cache_dir", Path(self.cache_dir))
+
+        # Auto-generate cache filenames from vocab_size and stride
+        object.__setattr__(self, "vocab_path", f"vocab_{self.vocab_size}.npy")
+        object.__setattr__(self, "bof_train_cache", f"train_bof_{self.vocab_size}.npy")
+        object.__setattr__(self, "bof_test_cache", f"test_bof_{self.vocab_size}.npy")
+
+        cache = Path(self.cache_dir)
+        object.__setattr__(self, "vocab_full_path", cache.joinpath(self.vocab_path))
+        object.__setattr__(self, "tiny_train_full_path", cache.joinpath(self.tiny_train_cache))
+        object.__setattr__(self, "tiny_test_full_path", cache.joinpath(self.tiny_test_cache))
+        object.__setattr__(self, "bof_train_full_path", cache.joinpath(self.bof_train_cache))
+        object.__setattr__(self, "bof_test_full_path", cache.joinpath(self.bof_test_cache))
+
+
+@dataclass(frozen=True)
 class AppConfig:
     """
     Aggregate global configuration entry point.
@@ -189,6 +265,7 @@ class AppConfig:
 
     paths: PathConfig = field(default_factory=PathConfig)
     scene: SceneConfig = field(default_factory=SceneConfig)
+    scene_rec: SceneRecConfig = field(default_factory=SceneRecConfig)
     experiment: ExperimentConfig = field(default_factory=ExperimentConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 
@@ -211,6 +288,7 @@ class AppConfig:
 
         paths_dict = config_dict.get("paths", {})
         scene_dict = config_dict.get("scene", {})
+        scene_rec_dict = config_dict.get("scene_rec", {})
         experiment_dict = config_dict.get("experiment", {})
         logging_dict = config_dict.get("logging", {})
 
@@ -227,6 +305,7 @@ class AppConfig:
         return cls(
             paths=PathConfig(**paths_dict),
             scene=SceneConfig(**scene_dict),
+            scene_rec=SceneRecConfig(**scene_rec_dict),
             experiment=ExperimentConfig(**experiment_dict),
             logging=LoggingConfig(**logging_dict),
         )

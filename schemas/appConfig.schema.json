@@ -54,6 +54,50 @@
         }
       }
     },
+    "scene": {
+      "type": "object",
+      "description": "场景识别数据集路径配置",
+      "properties": {
+        "data_dir": {
+          "type": "string",
+          "description": "场景识别数据根目录，包含 train/ 和 test/ 子目录"
+        }
+      }
+    },
+    "scene_rec": {
+      "type": "object",
+      "description": "场景识别管道超参数和缓存配置",
+      "properties": {
+        "vocab_size": {
+          "type": "integer",
+          "description": "视觉词表大小（k-means 聚类数），默认 100"
+        },
+        "cache_dir": {
+          "type": "string",
+          "description": "特征和词表缓存目录，默认 ./data"
+        },
+        "k_tiny_images": {
+          "type": "integer",
+          "description": "Tiny Image 管道的 k-NN k 值，默认 3"
+        },
+        "k_bag_of_sifts": {
+          "type": "integer",
+          "description": "BoF 管道的 k-NN k 值，默认 15"
+        },
+        "svm_c": {
+          "type": "number",
+          "description": "LinearSVM 正则化参数 C，默认 0.1"
+        },
+        "stride": {
+          "type": "integer",
+          "description": "密集 SIFT 采样的步长，默认 20"
+        },
+        "num_per_cat": {
+          "type": "integer",
+          "description": "每类训练图像数限制，默认 100"
+        }
+      }
+    },
     "logging": {
       "type": "object",
       "description": "日志行为配置",

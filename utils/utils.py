@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw
+from sklearn.metrics import confusion_matrix
 
 
 def load_image(image_path: str | Path) -> NDArray[np.float32]:
@@ -389,6 +390,37 @@ def evaluate_correspondence(
         y2_est * scale_factor,
         line_colors,
     )
+
+
+def show_results(
+    train_labels, test_labels, categories, abbr_categories, predicted_categories
+):
+    """
+    shows the results
+    :param train_image_paths:
+    :param test_image_paths:
+    :param train_labels:
+    :param test_labels:
+    :param categories:
+    :param abbr_categories:
+    :param predicted_categories:
+    :return:
+    """
+    cat2idx = {cat: idx for idx, cat in enumerate(categories)}
+
+    # confusion matrix
+    y_true = [cat2idx[cat] for cat in test_labels]
+    y_pred = [cat2idx[cat] for cat in predicted_categories]
+    plt_cm = confusion_matrix(y_true, y_pred)
+    plt.figure()
+    acc = np.mean(np.diag(plt_cm))
+    plt_cm = plt_cm.astype("float") / plt_cm.sum(axis=1)[:, np.newaxis]
+    plt.imshow(plt_cm, interpolation="nearest", cmap=plt.cm.get_cmap("jet"))
+    plt.title("Confusion matrix. Mean of diagonal = {:4.2f}%".format(acc))
+    tick_marks = np.arange(len(categories))
+    plt.tight_layout()
+    plt.xticks(tick_marks, abbr_categories, rotation=45)
+    plt.yticks(tick_marks, categories)
 
 
 if __name__ == "__main__":

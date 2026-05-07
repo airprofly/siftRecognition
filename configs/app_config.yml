@@ -18,6 +18,15 @@ paths:
 scene:
   data_dir: ./data
 
+scene_rec:
+  vocab_size: 200
+  cache_dir: ./data
+  k_tiny_images: 3
+  k_bag_of_sifts: 15
+  svm_c: 0.1
+  num_per_cat: 100
+  stride: 20
+
 experiment:
   scale_factor: 0.5
   num_points: 4500

@@ -1,3 +1,4 @@
+import random
 from collections.abc import Callable
 from pathlib import Path
 
@@ -5,6 +6,8 @@ import numpy as np
 from loguru import logger
 from PIL import Image
 from torch.utils.data import Dataset
+
+from configs import APP_CONFIG
 
 
 class SceneDataset(Dataset):
@@ -59,8 +62,9 @@ class SceneDataset(Dataset):
             self.classes.append(cat.name)
             self.class_to_idx[cat.name] = label
             for img_path in sorted(cat.iterdir()):
-                if img_path.suffix.lower() in valid_extensions:
-                    self.samples.append((img_path, label))
+                if img_path.suffix.lower() not in valid_extensions:
+                    continue
+                self.samples.append((img_path, label))
 
         if not self.samples:
             raise ValueError(
@@ -96,20 +100,30 @@ class SceneDataset(Dataset):
             raise IndexError(msg)
 
         img_path, label = self.samples[index]
-        image = np.asarray(Image.open(img_path).convert("RGB"), dtype=np.uint8)
+        try:
+            image = np.asarray(Image.open(img_path).convert("RGB"), dtype=np.uint8)
+        except Exception:
+            logger.warning(f"Corrupted image, resampling: {img_path}")
+            new_idx = random.randint(0, len(self.samples) - 1)
+            return self.__getitem__(new_idx)
         if self.transform is not None:
             image = self.transform(image)
         return image, label
 
 
-def build_scene_train_dataset(root_dir: Path) -> SceneDataset:
-    """Build the training SceneDataset from the resolved training directory."""
+def _build_scene_dataset(root_dir: Path) -> SceneDataset:
+    """Build a SceneDataset from a resolved directory path."""
     return SceneDataset(root_dir=root_dir)
 
 
-def build_scene_test_dataset(root_dir: Path) -> SceneDataset:
-    """Build the testing SceneDataset from the resolved testing directory."""
-    return SceneDataset(root_dir=root_dir)
+def build_scene_train_dataset(root_dir: Path = APP_CONFIG.scene.train_dir) -> SceneDataset:
+    """Build the training SceneDataset, defaulting to the config's train_dir."""
+    return _build_scene_dataset(root_dir)
+
+
+def build_scene_test_dataset(root_dir: Path = APP_CONFIG.scene.test_dir) -> SceneDataset:
+    """Build the testing SceneDataset, defaulting to the config's test_dir."""
+    return _build_scene_dataset(root_dir)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@ import math
 
 import numpy as np
 
-from models.recognition import pairwise_distances
+from models.kmeans import build_vocabulary, kmeans, kmeans_quantize
+from models.recognition import get_bags_of_sifts, get_tiny_images, nearest_neighbor_classify, pairwise_distances
 
 
 def test_pairwise_distances():
@@ -32,3 +33,204 @@ def test_pairwise_distances():
 
     assert np.array_equal(actual_distances, test_distances)
     assert np.array_equal(actual_distances_1, test_distances_1)
+
+
+def test_get_tiny_images_size():
+    im1 = np.ones((480, 640))
+    im2 = np.ones((1920, 1080))
+
+    images = [im1, im2]
+    tiny_images = get_tiny_images(images)
+    assert tiny_images.shape == (2, 256)
+
+
+def test_get_tiny_images_values():
+    image = np.zeros((40, 100))
+    image[:20, :50] += 1
+    image[:20, 50:] += 2
+    image[20:, :50] += 3
+    image[20:, 50:] += 4
+    images = [image]
+
+    tiny_images = get_tiny_images(images)
+    # print(tiny_images[:, :64])
+    assert tiny_images[0, 0] == np.min(tiny_images)
+    assert tiny_images[0, 119] == np.min(tiny_images)
+    assert tiny_images[0, 120] != np.min(tiny_images)
+    assert tiny_images[0, -1] == np.max(tiny_images)
+    assert tiny_images[0, -120] == np.max(tiny_images)
+    assert tiny_images[0, -121] != np.max(tiny_images)
+
+
+def test_nearest_neighbor_classify():
+    training_data = np.ones((30, 128))
+    training_data[:10, :] = np.random.randint(25, 75, (10, 128))
+    training_data[10:20, :] = np.random.randint(225, 275, (10, 128))
+    training_data[20:30, :] = np.random.randint(425, 475, (10, 128))
+
+    testing_data = np.ones((3, 128))
+    testing_data[0, :] *= 50
+    testing_data[1, :] *= 250
+    testing_data[2, :] *= 450
+
+    training_labels = np.zeros((30, 1))
+    training_labels[10:20, :] += 1
+    training_labels[20:30, :] += 2
+    training_labels = training_labels.flatten()
+    training_labels = list(training_labels)
+
+    labels = nearest_neighbor_classify(
+        training_data, training_labels, testing_data, k=1
+    )
+
+    gt_labels = [0, 1, 2]
+
+    # print(labels)
+
+    assert labels == gt_labels
+
+
+def test_nearest_neighbor_classify_k():
+    training_data = np.ones((5, 2))
+    training_data[0, :] = [0, 0]
+    training_data[1, :] = [1, 0]
+    training_data[2, :] = [0.5, 1]
+    training_data[3, :] = [1, 1]
+    training_data[4, :] = [2, 2]
+
+    testing_data = np.ones((1, 2))
+    testing_data *= 0.9
+
+    training_labels = [0, 0, 0, 1, 1]
+
+    labels = nearest_neighbor_classify(
+        training_data, training_labels, testing_data, k=3
+    )
+
+    gt_labels = np.zeros((1, 2))
+
+    # print(labels)
+
+    assert (np.array(labels) == gt_labels).all()
+
+
+def test_kmeans_2_classes_1d_features():
+    features = np.ones((10, 1))
+    features[5:, :] *= 2
+
+    centroids = kmeans(features, 2, max_iter=10)
+    # print(centroids)
+    gt_centroids = [[1], [2]]
+    gt_centroids = np.asarray(gt_centroids)
+    assert gt_centroids.shape == centroids.shape
+    mask = np.isin(gt_centroids, centroids)
+    # print(mask)
+    assert np.all(mask) == True
+
+
+def test_kmeans_5_classes_2d_features():
+    features = np.ones((60, 2))
+    features[5:10, :] *= 2
+    features[10:20, :] *= 12
+    features[30:40, 0] *= 20
+    features[30:40, 1] *= 21
+    features[40:50, 1] *= 35
+
+    centroids = kmeans(features, 5, max_iter=10)
+    # print(centroids)
+    gt_centroids = [[1, 1], [2, 2], [12, 12], [20, 21], [1, 35]]
+    gt_centroids = np.asarray(gt_centroids)
+    assert gt_centroids.shape == centroids.shape
+    mask = np.isin(gt_centroids, centroids)
+    # print(mask)
+    assert np.all(mask) == True
+
+
+def test_build_vocabulary_shape():
+    num_images = 10
+    images = []
+    for _ in range(num_images):
+        image = np.random.randint(0, 255, size=(50, 100)).astype("uint8")
+        images.append(image)
+
+    vocab = build_vocabulary(images, num_images)
+    # print(vocab)
+
+    assert vocab.shape == (num_images, 128)
+
+
+def test_build_vocabulary_values():
+    num_images = 10
+    images = []
+    for _ in range(num_images):
+        im = np.linspace(0, 255, 640 * 480).astype("uint8")
+        im = im.reshape((480, 640))
+        images.append(im)
+
+    vocab = build_vocabulary(images, num_images)
+
+    assert vocab.shape == (num_images, 128)
+    assert np.all(vocab >= 0) and np.all(vocab <= 1)
+    assert not np.allclose(vocab, np.zeros_like(vocab))
+
+
+def test_kmeans_quantize_exact_matches():
+    data = np.ones((50, 128))
+    data[10:20, :] *= 20
+    data[20:30, :] *= 30
+    data[30:40, :] *= 40
+    data[40:50, :] *= 50
+
+    centroids = np.ones((5, 128))
+    centroids[1, :] *= 20
+    centroids[2, :] *= 30
+    centroids[3, :] *= 40
+    centroids[4, :] *= 50
+
+    labels = kmeans_quantize(data, centroids)
+
+    gt_labels = np.zeros((50, 1))
+    gt_labels[10:20, :] += 1
+    gt_labels[20:30, :] += 2
+    gt_labels[30:40, :] += 3
+    gt_labels[40:50, :] += 4
+
+    assert np.equal(labels.all(), gt_labels.all())
+
+
+def test_kmeans_quantize_noisy_continuous():
+    data = np.ones((30, 128))
+    data[:10, :] = np.random.randint(25, 75, (10, 128))
+    data[10:20, :] = np.random.randint(225, 275, (10, 128))
+    data[20:30, :] = np.random.randint(425, 475, (10, 128))
+
+    centroids = np.ones((3, 128))
+    centroids[0, :] *= 50
+    centroids[1, :] *= 250
+    centroids[2, :] *= 450
+
+    labels = kmeans_quantize(data, centroids)
+
+    gt_labels = np.zeros((30, 1))
+    gt_labels[10:20, :] += 1
+    gt_labels[20:30, :] += 2
+
+    assert np.equal(labels.all(), gt_labels.all())
+
+
+def test_get_bags_of_sifts():
+    num_images = 10
+    images = []
+    for _ in range(num_images):
+        im = np.linspace(0, 255, 640 * 480).astype("uint8")
+        im = im.reshape((480, 640))
+        images.append(im)
+
+    from pathlib import Path
+
+    vocab_path = Path(__file__).resolve().parent / "test_data" / "vocab.npy"
+    vocabulary = np.load(str(vocab_path))
+
+    vocab = get_bags_of_sifts(images, vocabulary)
+
+    assert vocab.shape == (num_images, 50)
