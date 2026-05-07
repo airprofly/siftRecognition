@@ -94,7 +94,7 @@ def pipeline_tiny_images(
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_tiny_path)
     return predicted
 
 
@@ -155,7 +155,7 @@ def pipeline_bag_of_sifts(
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_bof_path)
     return predicted
 
 
@@ -183,7 +183,7 @@ def pipeline_bag_of_sifts_svm(
     accuracy = np.mean(np.array(predicted) == np.array(test_labels))
     logger.info(f"Accuracy: {accuracy:.2%}")
 
-    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_path)
+    show_results(train_labels, test_labels, cfg.categories, cfg.abbr_categories, predicted, save_path=cfg.confusion_matrix_svm_path)
     return predicted
 
 

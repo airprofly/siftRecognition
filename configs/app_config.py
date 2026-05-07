@@ -212,7 +212,9 @@ class SceneRecConfig:
     vocab_path: str | Path = Path("vocab_100.npy")
     bof_train_path: str | Path = Path("train_bof_100.npy")
     bof_test_path: str | Path = Path("test_bof_100.npy")
-    confusion_matrix_path: str | Path = Path("confusion_matrix.png")
+    confusion_matrix_tiny_path: str | Path = Path("confusion_matrix_tiny.png")
+    confusion_matrix_bof_path: str | Path = Path("confusion_matrix_bof.png")
+    confusion_matrix_svm_path: str | Path = Path("confusion_matrix_svm.png")
     categories: list[str] = field(
         default_factory=lambda: [
             "Kitchen", "Store", "Bedroom", "LivingRoom", "Office",
@@ -242,7 +244,9 @@ class SceneRecConfig:
         object.__setattr__(self, "tiny_test_path", cache.joinpath(Path(self.tiny_test_path)))
         object.__setattr__(self, "bof_train_path", cache.joinpath(f"train_bof_{self.vocab_size}.npy"))
         object.__setattr__(self, "bof_test_path", cache.joinpath(f"test_bof_{self.vocab_size}.npy"))
-        object.__setattr__(self, "confusion_matrix_path", results.joinpath(Path(self.confusion_matrix_path)))
+        object.__setattr__(self, "confusion_matrix_tiny_path", results.joinpath(Path(self.confusion_matrix_tiny_path)))
+        object.__setattr__(self, "confusion_matrix_bof_path", results.joinpath(Path(self.confusion_matrix_bof_path)))
+        object.__setattr__(self, "confusion_matrix_svm_path", results.joinpath(Path(self.confusion_matrix_svm_path)))
 
 
 @dataclass(frozen=True)

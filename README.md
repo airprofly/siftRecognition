@@ -75,7 +75,9 @@ project/
 │   └── test_bof_*.npy        # BoF 测试特征缓存（自动生成）
 ├── outputs/
 │   └── figures/
-│       └── confusion_matrix.png  # 混淆矩阵热力图
+│       ├── confusion_matrix_tiny.png  # 混淆矩阵：Tiny Image + k-NN
+│       ├── confusion_matrix_bof.png   # 混淆矩阵：Bag of SIFT + k-NN
+│       └── confusion_matrix_svm.png   # 混淆矩阵：Bag of SIFT + SVM
 ├── schemas/
 │   └── appConfig.schema.json # YAML 配置 JSON Schema
 ├── run_scene_recognition.py  # 🚀 场景识别主入口
@@ -127,7 +129,7 @@ conda activate pytorch
 python run_scene_recognition.py
 ```
 
-按顺序执行三条识别管线，输出分类准确率并保存混淆矩阵热力图到 `outputs/figures/` 目录。
+按顺序执行三条识别管线，输出分类准确率并分别保存混淆矩阵热力图到 `outputs/figures/` 目录。
 
 ### 自定义配置
 
@@ -169,7 +171,9 @@ python -m pytest tests/test_recognition.py -v
 
 <div align="center">
 
-<a href="outputs/figures/confusion_matrix.png" target="_blank">![混淆矩阵](outputs/figures/confusion_matrix.png)</a>
+| Tiny Image + k-NN (8.58%) | Bag of SIFT + k-NN (42.31%) | Bag of SIFT + SVM (53.80%) |
+|:---:|:---:|:---:|
+| ![Tiny结果](outputs/figures/confusion_matrix_tiny.png) | ![BoF+kNN结果](outputs/figures/confusion_matrix_bof.png) | ![BoF+SVM结果](outputs/figures/confusion_matrix_svm.png) |
 
 </div>
 
