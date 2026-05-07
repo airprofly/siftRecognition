@@ -3,9 +3,9 @@
 # 🔧 Harris 角点检测 · SIFT 特征 · 场景识别
 ### Harris Corner Detection, SIFT Feature Extraction & Scene Recognition
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![github](https://img.shields.io/badge/github-repository-black?logo=github)](https://github.com/airprofly/siftrecognition) [![Star](https://img.shields.io/github/stars/airprofly/siftRecognition?style=social)](https://github.com/airprofly/siftRecognition/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/) [![PyTorch 2.9](https://img.shields.io/badge/PyTorch-2.9+-orange.svg)](https://pytorch.org/) [![NumPy 2.3](https://img.shields.io/badge/NumPy-2.3+-green.svg)](https://numpy.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/) [![PyTorch 2.9+](https://img.shields.io/badge/PyTorch-2.9+-orange.svg)](https://pytorch.org/) [![NumPy 2.3+](https://img.shields.io/badge/NumPy-2.3+-green.svg)](https://numpy.org/)
 
 计算机视觉 · Harris 角点检测 · SIFT 特征 · 场景识别 · PyTorch
 
@@ -21,6 +21,8 @@
 2. **SIFT 特征提取** — 从零实现 SIFT 描述子计算的全流程
 3. **场景识别** — 三种分类管线（Tiny Image + k-NN / Bag of SIFT + k-NN / Bag of SIFT + SVM）
 
+数据集：[15 类场景数据集](http://people.csail.mit.edu/torralba/code/spatialenvelope/)，包含 Bedroom、Coast、Forest、Highway、Office 等常见室内外场景。
+
 ## 📌 功能特性
 
 - ✅ **HarrisNet** — 纯 PyTorch `nn.Sequential` 构建 Harris 角点检测器
@@ -29,7 +31,7 @@
 - ✅ **k-means 聚类** — 手动实现 k-means++ 初始化的聚类算法
 - ✅ **场景识别** — 三条完整管线（Tiny Image / BoF + k-NN / BoF + SVM）
 - ✅ **特征缓存** — 自动缓存特征与词表到本地，避免重复计算
-- ✅ **混淆矩阵** — 自动生成分类结果可视化
+- ✅ **混淆矩阵** — 自动生成 15 类分类结果可视化
 
 ## 📁 项目结构
 
@@ -39,12 +41,13 @@
 ```text
 project/
 ├── configs/                  # 🔧 配置系统
-│   ├── app_config.py         # AppConfig / SceneConfig / SceneRecConfig
+│   ├── app_config.py         # AppConfig / SceneRecConfig / PathConfig 等
 │   ├── app_config.yml        # YAML 配置文件
 │   ├── logger_config.py      # loguru 日志配置
 │   ├── plt_config.py         # matplotlib 交互配置
 │   └── __init__.py           # 全局 APP_CONFIG 单例
 ├── datasets/
+│   ├── __init__.py           # 公开 API：SceneDataset, build_scene_train/test_dataset
 │   └── scenedataset.py       # SceneDataset（按类别子目录组织）
 ├── models/                   # 🧠 模型实现
 │   ├── harrisNet.py          # HarrisNet — Harris 角点检测器
@@ -57,11 +60,19 @@ project/
 │   ├── utils.py              # 图像 I/O、可视化、评估
 │   └── dataloader.py         # Tiny Image 数据加载器
 ├── tests/                    # 📝 单元测试（pytest）
+│   ├── conftest.py           # sys.path 配置
 │   ├── test_harris.py        # HarrisNet 各层测试
 │   ├── test_sift.py          # SIFT 组件测试
 │   ├── test_feature_match.py # 特征匹配测试
-│   ├── test_recognition.py   # 场景识别完整测试
-│   └── conftest.py           # sys.path 配置
+│   └── test_recognition.py   # 场景识别完整测试
+├── data/                     # 💾 训练/测试数据与缓存
+│   ├── train/                # 训练集（15 类子目录）
+│   ├── test/                 # 测试集（15 类子目录）
+│   ├── vocab_*.npy           # 视觉词表缓存
+│   ├── train_tiny.npy        # Tiny Image 训练特征缓存
+│   ├── test_tiny.npy         # Tiny Image 测试特征缓存
+│   ├── train_bof_*.npy       # BoF 训练特征缓存
+│   └── test_bof_*.npy        # BoF 测试特征缓存
 ├── schemas/
 │   └── appConfig.schema.json # YAML 配置 JSON Schema
 ├── run_scene_recognition.py  # 🚀 场景识别主入口
@@ -90,6 +101,18 @@ conda activate pytorch
 pip install -r requirements.txt
 ```
 
+### 主要依赖
+
+| 依赖 | 版本 |
+|------|------|
+| Python | 3.12 |
+| PyTorch | 2.9+ |
+| torchvision | 0.24+ |
+| NumPy | 2.3+ |
+| scikit-learn | 1.8+ |
+| matplotlib | 3.10+ |
+| loguru | 0.7+ |
+
 </details>
 
 ## 🚀 快速开始
@@ -101,7 +124,20 @@ conda activate pytorch
 python run_scene_recognition.py
 ```
 
-按顺序执行三条识别管线，并输出混淆矩阵可视化结果。
+按顺序执行三条识别管线，输出分类准确率并保存混淆矩阵热力图到 `results/` 目录。
+
+### 自定义配置
+
+通过 `configs/app_config.yml` 调整超参数：
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `vocab_size` | 200 | 视觉词表大小（k-means 聚类数） |
+| `k_tiny_images` | 3 | Tiny Image 管线 k-NN k 值 |
+| `k_bag_of_sifts` | 15 | BoF 管线 k-NN k 值 |
+| `svm_c` | 0.1 | SVM 正则化参数 |
+| `num_per_cat` | 100 | 每类训练样本数 |
+| `stride` | 20 | 密集 SIFT 采样步长 |
 
 ### 运行测试
 
@@ -114,24 +150,6 @@ python -m pytest tests/test_harris.py -v
 python -m pytest tests/test_sift.py -v
 python -m pytest tests/test_recognition.py -v
 ```
-
-### 配置文件
-
-项目配置通过 `configs/app_config.yml` 管理，支持运行时修改：
-
-```yaml
-scene_rec:
-  vocab_size: 200        # 视觉词表大小
-  k_tiny_images: 3       # Tiny Image 管线 k-NN k 值
-  k_bag_of_sifts: 15     # BoF 管线 k-NN k 值
-  svm_c: 0.1             # SVM 正则化参数
-  num_per_cat: 100       # 每类训练样本数
-  stride: 20             # 密集 SIFT 采样步长
-```
-
-### 特征缓存
-
-场景识别管线自动缓存中间结果（视觉词表、特征矩阵）到 `data/` 目录，首次计算后自动复用。
 
 ## 🧠 核心算法
 
@@ -161,11 +179,11 @@ $$
 
 | 管线 | 特征 | 分类器 | 特点 |
 |------|------|--------|------|
-| **Tiny Image** | 16×16 灰度缩略图（256维） | k-NN (k=3) | 快速基线 |
-| **BoF + k-NN** | 密集 SIFT + k-means 词袋直方图 | k-NN (k=15) | 中层特征 |
-| **BoF + SVM** | 密集 SIFT + k-means 词袋直方图 | LinearSVM (C=0.1) | 最强分类器 |
+| **Tiny Image** | 16×16 灰度缩略图（256 维） | k-NN（k=3） | 快速基线 |
+| **BoF + k-NN** | 密集 SIFT + k-means 词袋直方图 | k-NN（k=15） | 中层特征 |
+| **BoF + SVM** | 密集 SIFT + k-means 词袋直方图 | LinearSVM（C=0.1） | 最强分类器 |
 
-数据集：[15 类场景数据集](http://people.csail.mit.edu/torralba/code/spatialenvelope/)，包含 Bedroom、Coast、Forest、Highway、Office 等常见室内外场景。
+15 类场景数据集包含：Kitchen、Store、Bedroom、LivingRoom、Office、Industrial、Suburb、InsideCity、TallBuilding、Street、Highway、OpenCountry、Coast、Mountain、Forest。
 
 ### k-means 聚类
 
@@ -181,6 +199,6 @@ $$
 
 1. C. Harris and M. Stephens — [*A Combined Corner and Edge Detector*](https://doi.org/10.5244/C.2.23), In *Proc. of Fourth Alvey Vision Conference*, 1988.
 2. D. G. Lowe — [*Distinctive Image Features from Scale-Invariant Keypoints*](https://doi.org/10.1023/B:VISI.0000029664.99615.94), *International Journal of Computer Vision*, 60(2):91–110, 2004.
-3. A. Torralba, R. Fergus, W. T. Freeman — [*80 Million Tiny Images: A Large Dataset for Non-Parametric Object and Scene Recognition*](https://doi.org/10.1109/TPAMI.2008.128), *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 30(11):1958–1970, 2008.
-4. J. Sivic and A. Zisserman — [*Video Google: A Text Retrieval Approach to Object Matching in Videos*](https://doi.org/10.1109/ICCV.2003.1238663), In *Proc. ICCV*, 2003.
-5. [15 Scene Category Dataset](https://people.csail.mit.edu/torralba/code/spatialenvelope/) — MIT CSAIL Spatial Envelope
+3. A. Torralba, R. Fergus, W. T. Freeman — [*80 Million Tiny Images: a Large Dataset for Non-parametric Object and Scene Recognition*](https://doi.org/10.1109/TPAMI.2008.128), *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 30(11):1958–1970, 2008.
+4. J. Sivic and A. Zisserman — [*Video Google: a Text Retrieval Approach to Object Matching in Videos*](https://ieeexplore.ieee.org/document/1238663), In *Proc. Ninth IEEE International Conference on Computer Vision (ICCV)*, pp. 1470–1477, 2003.
+5. [15 Scene Category Dataset](http://people.csail.mit.edu/torralba/code/spatialenvelope/) — MIT CSAIL Spatial Envelope, A. Torralba, R. Fergus, W. T. Freeman.

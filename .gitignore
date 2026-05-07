@@ -31,8 +31,8 @@ _deps/
 *.pth
 *.data
 *.onnx
-*.npz
-*.npy
+# *.npz
+# *.npy
 
 # =============== Python ===============
 **/__pycache__/

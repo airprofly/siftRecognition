@@ -197,9 +197,7 @@ def main() -> None:
     logger.info(f"Loaded {len(test_images)} test images")
 
     pipeline_tiny_images(train_images, train_labels, test_images, test_labels)
-
     pipeline_bag_of_sifts(train_images, train_labels, test_images, test_labels)
-
     pipeline_bag_of_sifts_svm(train_images, train_labels, test_images, test_labels)
 
     plt.show(block=True)
