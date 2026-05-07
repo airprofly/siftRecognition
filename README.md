@@ -185,6 +185,9 @@ python -m pytest tests/test_recognition.py -v
 
 ## 🧠 核心算法
 
+<details>
+<summary><b>点击展开</b> — Harris 角点检测 · SIFT 特征 · 场景识别 · k-means 聚类</summary>
+
 ### Harris 角点检测
 
 $$
@@ -197,6 +200,12 @@ $$
 - **输入**：任意尺寸灰度图像（N, 1, H, W）
 - **输出**：角点响应图 + 角点坐标
 
+<div align="center">
+
+<a href="docs/figures/harris-pipeline.png" target="_blank">![Harris 角点检测流程图](docs/figures/harris-pipeline.png)</a>
+
+</div>
+
 ### SIFT 特征
 
 从零实现 SIFT 描述子计算，包含：
@@ -205,9 +214,21 @@ $$
 - **描述子生成**：$4 \times 4$ 子区域 × 8 方向 = 128 维向量
 - **三线性插值**：相邻直方图 bin 的平滑分配
 
+<div align="center">
+
+<a href="docs/figures/sift-pipeline.png" target="_blank">![SIFT 特征提取流程图](docs/figures/sift-pipeline.png)</a>
+
+</div>
+
 ### 场景识别
 
 三条对比管线：
+
+<div align="center">
+
+<a href="docs/figures/scene-rec-pipelines.png" target="_blank">![场景识别三条管线对比图](docs/figures/scene-rec-pipelines.png)</a>
+
+</div>
 
 | 管线 | 特征 | 分类器 | 特点 |
 |------|------|--------|------|
@@ -222,6 +243,8 @@ $$
 - **初始化**：k-means++（加权距离采样）
 - **迭代**：基于广播的欧氏距离计算，支持收敛自动停止
 - **应用**：视觉词表构建 + SIFT 描述子量化
+
+</details>
 
 ## 📄 许可证
 
