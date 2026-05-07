@@ -3,9 +3,9 @@
 # 🔧 Harris 角点检测 · SIFT 特征 · 场景识别
 ### Harris Corner Detection, SIFT Feature Extraction & Scene Recognition
 
-[![github](https://img.shields.io/badge/github-repository-black?logo=github)](https://github.com/airprofly/siftrecognition) [![Star](https://img.shields.io/github/stars/airprofly/siftRecognition?style=social)](https://github.com/airprofly/siftRecognition/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?logo=github)](https://github.com/airprofly/siftRecognition) [![Star](https://img.shields.io/github/stars/airprofly/siftRecognition?style=social)](https://github.com/airprofly/siftRecognition/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/) [![PyTorch 2.9+](https://img.shields.io/badge/PyTorch-2.9+-orange.svg)](https://pytorch.org/) [![NumPy 2.3+](https://img.shields.io/badge/NumPy-2.3+-green.svg)](https://numpy.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/) [![PyTorch 2.9+](https://img.shields.io/badge/PyTorch-2.9+-orange.svg)](https://pytorch.org/) [![scikit-learn 1.8+](https://img.shields.io/badge/scikit--learn-1.8+-orange.svg)](https://scikit-learn.org/)
 
 计算机视觉 · Harris 角点检测 · SIFT 特征 · 场景识别 · PyTorch
 
@@ -65,14 +65,17 @@ project/
 │   ├── test_sift.py          # SIFT 组件测试
 │   ├── test_feature_match.py # 特征匹配测试
 │   └── test_recognition.py   # 场景识别完整测试
-├── data/                     # 💾 训练/测试数据与缓存
-│   ├── train/                # 训练集（15 类子目录）
+├── data/                     # 💾 训练/测试数据
+│   ├── train/                # 训练集（15 类子目录，每类 100 张）
 │   ├── test/                 # 测试集（15 类子目录）
-│   ├── vocab_*.npy           # 视觉词表缓存
-│   ├── train_tiny.npy        # Tiny Image 训练特征缓存
-│   ├── test_tiny.npy         # Tiny Image 测试特征缓存
-│   ├── train_bof_*.npy       # BoF 训练特征缓存
-│   └── test_bof_*.npy        # BoF 测试特征缓存
+│   ├── vocab_*.npy           # 视觉词表缓存（自动生成）
+│   ├── train_tiny.npy        # Tiny Image 训练特征缓存（自动生成）
+│   ├── test_tiny.npy         # Tiny Image 测试特征缓存（自动生成）
+│   ├── train_bof_*.npy       # BoF 训练特征缓存（自动生成）
+│   └── test_bof_*.npy        # BoF 测试特征缓存（自动生成）
+├── outputs/
+│   └── figures/
+│       └── confusion_matrix.png  # 混淆矩阵热力图
 ├── schemas/
 │   └── appConfig.schema.json # YAML 配置 JSON Schema
 ├── run_scene_recognition.py  # 🚀 场景识别主入口
@@ -124,7 +127,7 @@ conda activate pytorch
 python run_scene_recognition.py
 ```
 
-按顺序执行三条识别管线，输出分类准确率并保存混淆矩阵热力图到 `results/` 目录。
+按顺序执行三条识别管线，输出分类准确率并保存混淆矩阵热力图到 `outputs/figures/` 目录。
 
 ### 自定义配置
 
@@ -134,7 +137,6 @@ python run_scene_recognition.py
 |------|--------|------|
 | `vocab_size` | 200 | 视觉词表大小（k-means 聚类数） |
 | `k_tiny_images` | 3 | Tiny Image 管线 k-NN k 值 |
-| `k_bag_of_sifts` | 15 | BoF 管线 k-NN k 值 |
 | `svm_c` | 0.1 | SVM 正则化参数 |
 | `num_per_cat` | 100 | 每类训练样本数 |
 | `stride` | 20 | 密集 SIFT 采样步长 |
@@ -150,6 +152,32 @@ python -m pytest tests/test_harris.py -v
 python -m pytest tests/test_sift.py -v
 python -m pytest tests/test_recognition.py -v
 ```
+
+## 📊 实验结果
+
+在 15 类场景数据集（[15 Scene Category Dataset](http://people.csail.mit.edu/torralba/code/spatialenvelope/)）上评估三条识别管线的分类性能。训练集 1500 张（每类 100 张），测试集 2985 张。
+
+### 分类准确率
+
+| 管线 | 特征维度 | 分类器 | 准确率 |
+|------|---------|--------|:------:|
+| **Tiny Image + k-NN** | 256（16×16 缩略图） | k-NN（k=3） | **8.58%** |
+| **Bag of SIFT + k-NN** | 200（词袋直方图） | k-NN（k=15） | **42.31%** |
+| **Bag of SIFT + SVM** | 200（词袋直方图） | LinearSVM（C=0.1） | **53.80%** |
+
+### 混淆矩阵
+
+<div align="center">
+
+<a href="outputs/figures/confusion_matrix.png" target="_blank">![混淆矩阵](outputs/figures/confusion_matrix.png)</a>
+
+</div>
+
+**分析**：
+- **Tiny Image 基线**（8.58%）接近随机猜测（~6.67%），说明简单的缩略图特征表达能力有限
+- **BoF + k-NN**（42.31%）通过密集 SIFT 局部特征显著提升了分类性能
+- **BoF + SVM**（53.80%）使用线性 SVM 替代 k-NN，在 BoF 特征空间中找到更优的分类超平面，相比 k-NN 提升约 11 个百分点
+- 混淆矩阵显示多数分类错误集中在语义相似的场景之间（如 Coast / OpenCountry / Mountain 等室外场景）
 
 ## 🧠 核心算法
 
