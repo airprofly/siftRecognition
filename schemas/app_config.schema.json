@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AppConfig",
+  "description": "Application-level configuration file for scene recognition project",
+  "type": "object",
+  "properties": {
+    "paths": {
+      "type": "object",
+      "description": "Path-related configuration",
+      "properties": {
+        "data_dir": {"type": "string", "description": "Dataset directory path"},
+        "output": {
+          "type": "object",
+          "description": "Output directory structure",
+          "properties": {
+            "output_dir": {"type": "string", "description": "Output root directory path"},
+            "checkpoint_dir": {"type": "string", "description": "Model checkpoints subdirectory name"},
+            "figure_dir": {"type": "string", "description": "Figures subdirectory name"}
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "description": "Runtime environment configuration",
+      "properties": {
+        "device": {"type": "string", "description": "Computation device (cuda/cpu)"},
+        "batch_size": {"type": "integer", "description": "Number of samples per batch"},
+        "num_workers": {"type": "integer", "description": "Number of data loading workers"},
+        "pin_memory": {"type": "boolean", "description": "Whether to pin memory for GPU transfer"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "description": "Model architecture configuration",
+      "properties": {
+        "input_size": {"type": "array", "items": {"type": "integer"}, "description": "Input image dimensions [height, width]"},
+        "num_classes": {"type": "integer", "description": "Number of output classes"},
+        "dropout_rate": {"type": "number", "description": "Dropout probability"}
+      }
+    },
+    "optimizer": {
+      "type": "object",
+      "description": "Optimizer configuration",
+      "properties": {
+        "optimizer_type": {"type": "string", "enum": ["sgd", "adam"], "description": "Optimizer algorithm"},
+        "lr": {"type": "number", "description": "Learning rate"},
+        "weight_decay": {"type": "number", "description": "L2 regularization coefficient"}
+      }
+    },
+    "training": {
+      "type": "object",
+      "description": "Training execution configuration",
+      "properties": {
+        "models": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["simple", "dropout", "alexnet"]},
+          "description": "List of model names to train"
+        },
+        "num_epochs": {"type": "integer", "description": "Number of training epochs for each model"}
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging behavior configuration",
+      "properties": {
+        "log_dir": {"type": "string", "description": "Log output directory path"},
+        "level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "description": "Log level"
+        },
+        "retention": {"type": "string", "description": "Log file retention time"},
+        "file_pattern": {"type": "string", "description": "Log filename pattern"}
+      }
+    }
+  }
+}

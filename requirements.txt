@@ -1,0 +1,24 @@
+# Deep Learning Framework
+torch>=1.10.0
+torchvision>=0.11.0
+
+# Data Science
+numpy>=1.21.0
+pillow>=8.0.0
+scikit-learn>=1.0.0
+
+# Visualization
+matplotlib>=3.4.0
+
+# Logging
+loguru>=0.6.0
+
+# Progress Bar
+tqdm>=4.62.0
+
+# Configuration
+pyyaml>=6.0
+dacite>=1.8.0
+
+# Testing
+pytest>=7.0.0

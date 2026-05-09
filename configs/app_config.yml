@@ -1,0 +1,35 @@
+paths:
+  data_dir: ./data
+  output:
+    output_dir: ./outputs
+    checkpoint_dir: checkpoints
+    figure_dir: figures
+
+runtime:
+  device: cuda
+  batch_size: 32
+  num_workers: 1
+  pin_memory: true
+
+model:
+  input_size: [64, 64]
+  num_classes: 15
+  dropout_rate: 0.5
+
+optimizer:
+  optimizer_type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+
+training:
+  models:
+    - simple
+    - dropout
+    - alexnet
+  num_epochs: 30
+
+logging:
+  log_dir: ./outputs
+  level: INFO
+  retention: 7 days
+  file_pattern: "{time:YYYY-MM-DD_HH-mm-ss}.log"
