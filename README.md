@@ -3,7 +3,7 @@
 # 🔧 场景识别深度学习训练系统
 ### Scene Recognition Deep Learning Training System
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?logo=github)](https://github.com/airprofly/siftRecognition) [![Star](https://img.shields.io/github/stars/airprofly/siftRecognition?style=social)](https://github.com/airprofly/siftRecognition/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub](https://img.shields.io/badge/GitHub-feature/deeplearning-blue?logo=github)](https://github.com/airprofly/siftRecognition/tree/feature/deeplearning) [![Star](https://img.shields.io/github/stars/airprofly/siftRecognition?style=social)](https://github.com/airprofly/siftRecognition/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.9+-orange.svg)](https://pytorch.org/) [![NumPy](https://img.shields.io/badge/NumPy-2.3+-orange.svg)](https://numpy.org/)
 
@@ -70,7 +70,7 @@ proj4/
 │   ├── test_model.py
 │   ├── test_simplenet.py
 │   └── test_status_helper.py
-├── docs/                # 📖 实验报告（[查看详情](./docs/README.md)）
+├── docs/                # 📖 实验报告（LaTeX 源码与图表）
 ├── main.py              # 🚀 主程序入口
 ├── environment.yml      # 📄 Conda 环境配置
 ├── requirements.txt     # 📄 pip 依赖
